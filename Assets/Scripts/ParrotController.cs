@@ -1,15 +1,16 @@
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.UI;
+using UnityEngine.InputSystem; // Importante para el nuevo Input System
 
 [RequireComponent(typeof(NavMeshAgent))]
 public class ParrotController : MonoBehaviour
 {
     [Header("UI")]
-    public Button feedButton; // Asigna el botón UI de "Dar Galleta"
+    public Button feedButton;
 
     [Header("Configuración de Capa / Raycast")]
-    public LayerMask groundLayer; // Asigna la capa del suelo (p. ej. Default o Ground)
+    public LayerMask groundLayer;
 
     private NavMeshAgent agent;
     private PlayerMovement playerInRange;
@@ -28,10 +29,15 @@ public class ParrotController : MonoBehaviour
 
     void Update()
     {
-        // Si ya se consumió la galleta y estamos esperando el clic en el suelo
-        if (waitingForTargetClick && Input.GetMouseButtonDown(0))
+        var mouse = Mouse.current;
+        if (mouse == null) return;
+
+        // Detectar clic izquierdo con el nuevo Input System
+        if (waitingForTargetClick && mouse.leftButton.wasPressedThisFrame)
         {
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            Vector2 mousePosition = mouse.position.ReadValue();
+            Ray ray = Camera.main.ScreenPointToRay(mousePosition);
+
             if (Physics.Raycast(ray, out RaycastHit hit, 100f, groundLayer))
             {
                 agent.SetDestination(hit.point);
