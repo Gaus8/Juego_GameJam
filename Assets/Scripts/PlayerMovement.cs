@@ -91,6 +91,33 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    // Detecta si el gato toca al jugador mediante un Collider Trigger
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("gato"))
+        {
+            KillPlayerByCat();
+        }
+    }
+
+    // Detecta si el gato toca al jugador mediante un Collider Físico (no trigger)
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.gameObject.CompareTag("gato"))
+        {
+            KillPlayerByCat();
+        }
+    }
+
+    private void KillPlayerByCat()
+    {
+        if (isDead) return;
+
+        currentHealth = 0f;
+        Debug.Log("<color=red>¡El gato atrapó al jugador!</color>");
+        Die();
+    }
+
     public void GetScared()
     {
         if (isDead) return;
@@ -162,33 +189,30 @@ public class PlayerMovement : MonoBehaviour
     private void Die()
     {
         isDead = true;
-        Debug.Log("El jugador se ha quedado sin aire.");
+        Debug.Log("El jugador se ha quedado sin aire o fue atrapado.");
 
         if (animator != null)
         {
             animator.SetTrigger("die");
         }
 
-        // Inicia la cuenta regresiva para reiniciar la escena
         StartCoroutine(DieRoutine());
     }
 
     private IEnumerator DieRoutine()
     {
-        // Espera los segundos asignados en restartDelay antes de recargar
         yield return new WaitForSeconds(restartDelay);
 
-        // Carga de nuevo la escena que está activa en este momento
         Scene currentScene = SceneManager.GetActiveScene();
         SceneManager.LoadScene(currentScene.name);
     }
-    // Agrega este método dentro de PlayerMovement.cs
+
     public void RechargeInhaler(float amount)
     {
         if (isDead) return;
 
         inhalerCharge += amount;
-        inhalerCharge = Mathf.Clamp(inhalerCharge, 0f, 100f); // Evita sobrepasar el 100%
+        inhalerCharge = Mathf.Clamp(inhalerCharge, 0f, 100f);
         Debug.Log($"Inhalador recargado en {amount}%. Carga actual: {inhalerCharge}%");
     }
 }
