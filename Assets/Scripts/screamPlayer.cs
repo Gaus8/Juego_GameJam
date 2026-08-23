@@ -34,6 +34,7 @@ public class screamPlayer : MonoBehaviour
             if (player != null)
             {
                 player.DeductHealth(scareDamageAmount);
+                player.GetScared();
                 Debug.Log($"<color=red>¡SUSTO!</color> {gameObject.name} asustó al jugador por {scareDamageAmount} de daño.");
 
                 // 4. Opcional: Destruir este objeto para que no asuste dos veces
