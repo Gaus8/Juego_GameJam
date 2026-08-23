@@ -4,7 +4,9 @@ using UnityEngine.InputSystem; // Si usas el New Input System
 
 public class PauseMenu : MonoBehaviour
 {
-    public GameObject pauseMenuUI; // Arrastra tu MenuPausaPanel aquí
+    public GameObject pauseMenuUI; // Arrastra tu MenuPausaPanel aquï¿½
+    public GameObject panelInstucciones;
+
     public static bool isPaused = false;
 
     void Update()
@@ -27,7 +29,7 @@ public class PauseMenu : MonoBehaviour
     public void Resume()
     {
         pauseMenuUI.SetActive(false);
-        Time.timeScale = 1f; // Reanuda la física y el tiempo
+        Time.timeScale = 1f; // Reanuda la fï¿½sica y el tiempo
         isPaused = false;
 
         // Oculta y bloquea el cursor para el juego
@@ -38,7 +40,7 @@ public class PauseMenu : MonoBehaviour
     public void Pause()
     {
         pauseMenuUI.SetActive(true);
-        Time.timeScale = 0f; // Congela la física y la simulación
+        Time.timeScale = 0f; // Congela la fï¿½sica y la simulaciï¿½n
         isPaused = true;
 
         // Libera el cursor para poder hacer clic en los botones
@@ -58,11 +60,20 @@ public class PauseMenu : MonoBehaviour
         Time.timeScale = 1f; // Reestablece la velocidad del juego
         isPaused = false;
 
-        // Muestra el cursor para usar el menú principal
+        // Muestra el cursor para usar el menï¿½ principal
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
 
-        // Carga la escena del menú principal
+        // Carga la escena del menï¿½ principal
         SceneManager.LoadScene("mainMenu");
+    }
+
+    public void OpenPanelInstructions()
+    {
+        panelInstucciones.SetActive(true);
+    }
+      public void ClosePanelInstructions()
+    {
+        panelInstucciones.SetActive(false);
     }
 }
