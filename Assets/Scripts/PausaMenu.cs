@@ -30,7 +30,7 @@ public class PauseMenu : MonoBehaviour
         Time.timeScale = 1f; // Reanuda la física y el tiempo
         isPaused = false;
 
-        // Desbloquea el cursor si es necesario
+        // Oculta y bloquea el cursor para el juego
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
@@ -49,13 +49,20 @@ public class PauseMenu : MonoBehaviour
     public void RestartGame()
     {
         Time.timeScale = 1f; // Asegura reactivar el tiempo antes de recargar
+        isPaused = false;
         SceneManager.LoadScene(SceneManager.GetActiveScene().name);
     }
 
     public void QuitGame()
     {
-        Time.timeScale = 1f;
-        Debug.Log("Saliendo del juego...");
-        Application.Quit();
+        Time.timeScale = 1f; // Reestablece la velocidad del juego
+        isPaused = false;
+
+        // Muestra el cursor para usar el menú principal
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
+
+        // Carga la escena del menú principal
+        SceneManager.LoadScene("mainMenu");
     }
 }

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-[RequireComponent(typeof(Collider))] // Obliga a que haya un Collider en el objeto
+[RequireComponent(typeof(Collider))]
 public class screamPlayer : MonoBehaviour
 {
     [Header("Configuración del Susto")]
@@ -10,9 +10,16 @@ public class screamPlayer : MonoBehaviour
     [Tooltip("Si está activado, el objeto se destruirá después de asustar una vez.")]
     public bool destroyOnUse = true;
 
+    [Header("Sonido del Susto")]
+    [Tooltip("Clip de audio que sonará al asustar.")]
+    public AudioClip scareSound;
+
+    [Tooltip("Volumen del sonido (entre 0.0 y 1.0).")]
+    [Range(0f, 1f)]
+    public float soundVolume = 1f;
+
     private void Start()
     {
-        // Asegurarnos de que el Collider esté configurado correctamente como Trigger
         Collider col = GetComponent<Collider>();
         if (!col.isTrigger)
         {
@@ -23,21 +30,23 @@ public class screamPlayer : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        // 1. Verificar si lo que entró en el trigger es el Jugador
-        // Para esto, el objeto del Jugador DEBE tener el Tag "Player"
         if (other.CompareTag("Player"))
         {
-            // 2. Intentar obtener el script PlayerMovement del objeto que entró
             PlayerMovement player = other.GetComponent<PlayerMovement>();
 
-            // 3. Si el script existe, aplicar el daño
             if (player != null)
             {
                 player.DeductHealth(scareDamageAmount);
                 player.GetScared();
+
+                // Reproduce el sonido en la posición del objeto antes de destruirlo
+                if (scareSound != null)
+                {
+                    AudioSource.PlayClipAtPoint(scareSound, transform.position, soundVolume);
+                }
+
                 Debug.Log($"<color=red>¡SUSTO!</color> {gameObject.name} asustó al jugador por {scareDamageAmount} de daño.");
 
-                // 4. Opcional: Destruir este objeto para que no asuste dos veces
                 if (destroyOnUse)
                 {
                     Destroy(gameObject);
