@@ -4,6 +4,9 @@ using UnityEngine.UI;
 
 public class UIManager : MonoBehaviour
 {
+    [Header("Elementos de UI (Barras)")]
+    public Image healthBarImage; // Asigna aquÃ­ el objeto "Fill" de EstaminaBar
+
     [Header("Referencias")]
     public PlayerMovement player; // Referencia al jugador
 
@@ -12,13 +15,13 @@ public class UIManager : MonoBehaviour
     public TextMeshProUGUI cookieText;
     public TextMeshProUGUI inhalerText;
 
-    [Header("Elementos de UI opcionales (Barras)")]
-    public Slider healthSlider;  // Opcional: si usas una barra para la vida
-    public Slider inhalerSlider; // Opcional: si usas una barra para el inhalador
+    [Header("Elementos de UI opcionales (Barras Sliders)")]
+    public Slider healthSlider;  // Opcional
+    public Slider inhalerSlider; // Opcional
 
     void Start()
     {
-        // Configurar los rangos máximos de las barras si están asignadas
+        // Configurar los rangos mÃ¡ximos de las barras si estÃ¡n asignadas
         if (player != null)
         {
             if (healthSlider != null) healthSlider.maxValue = player.maxHealth;
@@ -48,8 +51,22 @@ public class UIManager : MonoBehaviour
             inhalerText.text = $"Inhalador: {Mathf.CeilToInt(player.inhalerCharge)}%";
         }
 
-        // 4. Actualizar Barras Sliders (si se están utilizando)
+        // 4. Actualizar la NUEVA BARRA DE VIDA (Image Filled)
+        if (healthBarImage != null && player.maxHealth > 0)
+        {
+            healthBarImage.fillAmount = player.currentHealth / player.maxHealth;
+        }
+
+        // 5. Actualizar Sliders viejos (si los sigues usando)
         if (healthSlider != null) healthSlider.value = player.currentHealth;
         if (inhalerSlider != null) inhalerSlider.value = player.inhalerCharge;
+    }
+
+    public void UpdateHealth(float currentHealth, float maxHealth)
+    {
+        if (healthBarImage != null && maxHealth > 0)
+        {
+            healthBarImage.fillAmount = currentHealth / maxHealth;
+        }
     }
 }
