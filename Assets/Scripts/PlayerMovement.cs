@@ -182,4 +182,13 @@ public class PlayerMovement : MonoBehaviour
         Scene currentScene = SceneManager.GetActiveScene();
         SceneManager.LoadScene(currentScene.name);
     }
+    // Agrega este método dentro de PlayerMovement.cs
+    public void RechargeInhaler(float amount)
+    {
+        if (isDead) return;
+
+        inhalerCharge += amount;
+        inhalerCharge = Mathf.Clamp(inhalerCharge, 0f, 100f); // Evita sobrepasar el 100%
+        Debug.Log($"Inhalador recargado en {amount}%. Carga actual: {inhalerCharge}%");
+    }
 }
