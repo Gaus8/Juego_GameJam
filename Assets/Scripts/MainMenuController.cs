@@ -7,25 +7,25 @@ using UnityEditor;
 
 public class MainMenuController : MonoBehaviour
 {
-    [Header("Paneles del Menú")]
+    [Header("Paneles del Menu")]
     public GameObject mainMenuPanel;
-    public GameObject instruccionesPanel;
-    public GameObject creditosPanel;
+    public GameObject panelInstructions;
+    public GameObject panelCredits;
 
-    [Header("Configuración de Escena")]
+    [Header("Configuraciï¿½n de Escena")]
 #if UNITY_EDITOR
-    [Tooltip("Arrastra aquí el archivo de la escena a la que quieres cambiar")]
+    [Tooltip("Arrastra aquï¿½ el archivo de la escena a la que quieres cambiar")]
     public SceneAsset escenaDelJuego;
 #endif
 
-    // Almacena el nombre internamente para la compilación final (Build)
+    // Almacena el nombre internamente para la compilaciï¿½n final (Build)
     [SerializeField, HideInInspector]
     private string nombreEscenaGuardado;
 
     private void OnValidate()
     {
 #if UNITY_EDITOR
-        // Actualiza automáticamente el nombre si arrastras una escena diferente en el Inspector
+        // Actualiza automï¿½ticamente el nombre si arrastras una escena diferente en el Inspector
         if (escenaDelJuego != null)
         {
             nombreEscenaGuardado = escenaDelJuego.name;
@@ -47,20 +47,20 @@ public class MainMenuController : MonoBehaviour
 
     public void MostrarInstrucciones()
     {
-        mainMenuPanel.SetActive(false);
-        instruccionesPanel.SetActive(true);
+    
+        panelInstructions.SetActive(true);
     }
 
     public void MostrarCreditos()
     {
-        mainMenuPanel.SetActive(false);
-        creditosPanel.SetActive(true);
+    
+        panelCredits.SetActive(true);
     }
 
     public void VolverAlMenuPrincipal()
     {
-        instruccionesPanel.SetActive(false);
-        creditosPanel.SetActive(false);
+        panelInstructions.SetActive(false);
+        panelCredits.SetActive(false);
         mainMenuPanel.SetActive(true);
     }
 
@@ -68,5 +68,15 @@ public class MainMenuController : MonoBehaviour
     {
         Debug.Log("Saliendo del juego...");
         Application.Quit();
+    }
+
+    public void CerrarModalInstrucciones()
+    {
+         panelInstructions.SetActive(false);
+    }
+
+     public void CerrarModalCreditos()
+    {
+         panelCredits.SetActive(false);
     }
 }
