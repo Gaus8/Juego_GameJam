@@ -1,44 +1,92 @@
 using UnityEngine;
 using UnityEngine.AI;
 
+[RequireComponent(typeof(NavMeshAgent))]
+[RequireComponent(typeof(AudioSource))]
 public class CatMovement : MonoBehaviour
 {
     [Header("Configuración de Ruta")]
     public Transform[] puntosDeDestino;
 
+    [Header("Velocidades del NavMeshAgent")]
+    public float walkSpeed = 2.5f;
+    public float chaseSpeed = 5.0f;
+
+    [Header("Persecución / Ataque")]
+    public PlayerMovement targetPlayer;
+    public bool isAttack = false;
+    public bool attackLess90 = false;
+
+    [Header("Audio Clips")]
+    public AudioClip attackSound;
+
     private NavMeshAgent agent;
     private Animator animator;
+    private AudioSource audioSource;
     private int indiceActual = 0;
+    private bool haAtrapado = false;
 
     void Start()
     {
         agent = GetComponent<NavMeshAgent>();
         animator = GetComponentInChildren<Animator>();
+        audioSource = GetComponent<AudioSource>();
 
-        // Si no hay puntos válidos asignados, se activa el estado de dormir por defecto
+        if (targetPlayer == null)
+        {
+            targetPlayer = FindFirstObjectByType<PlayerMovement>();
+        }
+
+        EvaluarEstadoGato();
+    }
+
+    void Update()
+    {
+        bool debePerseguir = DebePerseguirJugador();
+
+        // 1. Control de velocidad y animaciones de movimiento
+        if (agent != null)
+        {
+            bool estaMoviendose = agent.velocity.sqrMagnitude > 0.05f && !agent.isStopped;
+
+            if (debePerseguir && targetPlayer != null)
+            {
+                // Modo Persecución (Correr)
+                agent.speed = chaseSpeed;
+
+                if (animator != null)
+                {
+                    animator.SetBool("isRunning", estaMoviendose);
+                    animator.SetBool("isWalking", false);
+                }
+
+                IrACama(false);
+                agent.isStopped = false;
+                agent.SetDestination(targetPlayer.transform.position);
+                return;
+            }
+            else
+            {
+                // Modo Patrullaje (Caminar)
+                agent.speed = walkSpeed;
+
+                if (animator != null)
+                {
+                    animator.SetBool("isWalking", estaMoviendose);
+                    animator.SetBool("isRunning", false);
+                }
+            }
+        }
+
+        // 2. Si no hay puntos válidos y no persigue -> Dormir
         if (!TienePuntosValidos())
         {
             IrACama(true);
             return;
         }
 
-        IrAlSiguientePunto();
-    }
-
-    void Update()
-    {
-        // 1. Control automático de la animación Walk basado en el movimiento del NavMeshAgent
-        if (animator != null && agent != null)
-        {
-            bool estaCaminando = agent.velocity.sqrMagnitude > 0.05f && !agent.isStopped;
-            animator.SetBool("isWalking", estaCaminando);
-        }
-
-        // Si no hay puntos válidos o el agente está detenido, no procesa patrullaje
-        if (!TienePuntosValidos() || agent.isStopped) return;
-
-        // 2. Lógica de patrullaje
-        if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
+        // 3. Patrullaje por puntos
+        if (!agent.isStopped && !agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
         {
             if (!agent.hasPath || agent.velocity.sqrMagnitude == 0f)
             {
@@ -47,17 +95,83 @@ public class CatMovement : MonoBehaviour
         }
     }
 
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Player"))
+        {
+            EjecutarAtaque();
+        }
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.gameObject.CompareTag("Player"))
+        {
+            EjecutarAtaque();
+        }
+    }
+
+    private void EjecutarAtaque()
+    {
+        if (!haAtrapado)
+        {
+            haAtrapado = true;
+            Gritar();
+
+            if (attackSound != null && audioSource != null)
+            {
+                audioSource.PlayOneShot(attackSound);
+            }
+        }
+    }
+
+    private bool DebePerseguirJugador()
+    {
+        if (targetPlayer == null) return false;
+
+        if (isAttack) return true;
+
+        if (attackLess90)
+        {
+            float porcentajeSalud = (targetPlayer.currentHealth / targetPlayer.maxHealth) * 100f;
+            if (porcentajeSalud < 90f)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void EvaluarEstadoGato()
+    {
+        if (DebePerseguirJugador())
+        {
+            agent.speed = chaseSpeed;
+            IrACama(false);
+        }
+        else if (TienePuntosValidos())
+        {
+            agent.speed = walkSpeed;
+            IrAlSiguientePunto();
+        }
+        else
+        {
+            IrACama(true);
+        }
+    }
+
     void IrAlSiguientePunto()
     {
         if (!TienePuntosValidos()) return;
 
-        // Si el punto actual en el arreglo es null, busca el siguiente que sea válido
         if (puntosDeDestino[indiceActual] == null)
         {
             AvanzarAlSiguientePunto();
             return;
         }
 
+        IrACama(false);
         agent.isStopped = false;
         agent.SetDestination(puntosDeDestino[indiceActual].position);
     }
@@ -68,13 +182,11 @@ public class CatMovement : MonoBehaviour
 
         int intentos = 0;
 
-        // Ciclo para ignorar elementos nulos dentro del array
         do
         {
             indiceActual = (indiceActual + 1) % puntosDeDestino.Length;
             intentos++;
 
-            // Evita un bucle infinito si todos los elementos del array son null
             if (intentos >= puntosDeDestino.Length)
             {
                 IrACama(true);
@@ -86,7 +198,6 @@ public class CatMovement : MonoBehaviour
         IrAlSiguientePunto();
     }
 
-    // Comprueba si el array existe y si al menos contiene un elemento que no sea null
     private bool TienePuntosValidos()
     {
         if (puntosDeDestino == null || puntosDeDestino.Length == 0) return false;
@@ -99,18 +210,21 @@ public class CatMovement : MonoBehaviour
         return false;
     }
 
-    // --- Métodos públicos para invocar eventos específicos ---
-
     public void IrACama(bool dormido)
     {
         if (animator != null)
         {
             animator.SetBool("isSleeping", dormido);
+            if (dormido)
+            {
+                animator.SetBool("isWalking", false);
+                animator.SetBool("isRunning", false);
+            }
         }
 
         if (agent != null)
         {
-            agent.isStopped = dormido; // Detiene el NavMeshAgent si se duerme
+            agent.isStopped = dormido;
             if (dormido)
             {
                 agent.ResetPath();
