@@ -2684,8 +2684,11 @@ MonoBehaviour:
   puntosDeDestino:
   - {fileID: 0}
   - {fileID: 1807910193}
+  - {fileID: 427269263}
   - {fileID: 23300855}
+  - {fileID: 694079150}
   - {fileID: 1949045992}
+  - {fileID: 53126294}
   walkSpeed: 2.5
   chaseSpeed: 5
   targetPlayer: {fileID: 1993396518}
