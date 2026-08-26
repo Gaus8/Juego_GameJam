@@ -14,8 +14,9 @@
         _LightIntensity("Light Intensity", Range(0, 4)) = 1.4
         _AmbientFill("Ambient Fill", Range(0, 1)) = 0.35
         _ShadowFill("Shadow Fill", Range(0, 2)) = 1
-        _ToonMid("Toon Mid", Range(0.01, 1)) = 0.16
-        _ToonCore("Toon Highlight", Range(0.01, 1)) = 0.48
+        _ToonMid("Toon Mid", Range(0.01, 1)) = 0.08
+        _ToonCore("Toon Highlight", Range(0.01, 1)) = 0.4
+        _LightReach("Light Reach", Range(1, 20)) = 10
     }
 
     SubShader
@@ -82,6 +83,7 @@
                 float _ShadowFill;
                 float _ToonMid;
                 float _ToonCore;
+                float _LightReach;
             CBUFFER_END
 
             Varyings vert(Attributes input)
@@ -124,6 +126,12 @@
                 return saturate(mid * 0.55 + core * 0.45);
             }
 
+            float ToonAttenuation(float atten)
+            {
+                float k = rcp(max(_LightReach, 0.01));
+                return saturate(atten / (atten + k));
+            }
+
             float ToonLightAmount(Light light, float3 normal)
             {
                 float nDotL = saturate(dot(light.direction, normal));
@@ -132,11 +140,13 @@
                 return ToonRamp(raw);
             }
 
-            float3 LightDiffuse(Light light, float3 normal)
+            float3 LightDiffuse(Light light, float3 normal, bool stretchRange)
             {
                 float nDotL = saturate(dot(light.direction, normal));
-                float raw = nDotL * light.distanceAttenuation * light.shadowAttenuation;
-                return light.color * ToonRamp(raw);
+                float atten = light.distanceAttenuation * light.shadowAttenuation;
+                if (stretchRange)
+                    atten = ToonAttenuation(atten);
+                return light.color * ToonRamp(nDotL * atten);
             }
 
             float4 frag(Varyings input) : SV_Target
@@ -150,7 +160,7 @@
                 Light mainLight = GetMainLight(shadowCoord);
 
                 float mainAmount = ToonLightAmount(mainLight, normal);
-                float3 mainDiffuse = LightDiffuse(mainLight, normal);
+                float3 mainDiffuse = LightDiffuse(mainLight, normal, false);
                 float3 extraDiffuse = 0;
 
                 #if defined(_ADDITIONAL_LIGHTS)
@@ -161,7 +171,7 @@
 
                 LIGHT_LOOP_BEGIN(pixelLightCount)
                     Light extraLight = GetAdditionalLight(lightIndex, input.positionWS, half4(1, 1, 1, 1));
-                    extraDiffuse += LightDiffuse(extraLight, normal);
+                    extraDiffuse += LightDiffuse(extraLight, normal, true);
                 LIGHT_LOOP_END
                 #endif
 
